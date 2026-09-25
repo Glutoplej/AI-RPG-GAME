@@ -1,0 +1,52 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Pobranie kodu z repozytorium
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Logowanie do Docker Huba
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # 3. Budowanie i wysyłanie obrazu na Docker Hub
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/rpg-agent:latest
+
+    # 4. Łączenie przez SSH z EC2 i uruchomienie nowego kontenera
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # Pobranie najnowszego obrazu
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/rpg-agent:latest
+          
+          # Zatrzymanie i usunięcie starego kontenera (jeśli istnieje)
+          docker stop rpg-app || true
+          docker rm rpg-app || true
+          
+          # Uruchomienie nowego kontenera z przekazaniem klucza API
+          docker run -d \
+            --name rpg-app \
+            -p 8080:8080 \
+            -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
+            --restart always \
+            ${{ secrets.DOCKERHUB_USERNAME }}/rpg-agent:latest
