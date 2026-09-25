@@ -4,7 +4,7 @@ Projekt demonstracyjny przedstawiający skonteneryzowaną aplikację w Pythonie 
 
 ---
 
-##🛠Arcitektura i Technologie
+## Arcitektura i Technologie
 
 * **Aplikacja:** Python 3.11, Flask, Gunicorn
 * **Konteneryzacja:** Docker, Docker Hub
@@ -14,7 +14,7 @@ Projekt demonstracyjny przedstawiający skonteneryzowaną aplikację w Pythonie 
 
 ---
 
-##  Pipeline CI/CD (GitHub Actions)
+## Pipeline CI/CD (GitHub Actions)
 
 Każdy `git push` na gałąź `main` wyzwala automatyczny workflow (`.github/workflows/deploy.yml`):
 
